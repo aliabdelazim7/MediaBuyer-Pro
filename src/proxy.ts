@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow public routes
+  // 1. Allow public routes & assets
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth') ||
@@ -21,7 +21,6 @@ export function middleware(request: NextRequest) {
   const authToken = request.cookies.get('auth_token')?.value;
 
   if (!authToken) {
-    // Redirect unauthenticated user to login page
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
