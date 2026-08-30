@@ -8,17 +8,19 @@ import {
   MetaAdSetDTO
 } from '../../application/ports/IMetaGraphClient';
 
+import { APP_CONFIG } from '../config/defaults';
+
 export class MetaGraphClient implements IMetaGraphClient {
   private apiVersion = 'v21.0';
   private baseUrl = `https://graph.facebook.com/${this.apiVersion}`;
   private defaultAccessToken: string;
 
   constructor(accessToken?: string) {
-    this.defaultAccessToken = accessToken || process.env.META_ACCESS_TOKEN || '';
+    this.defaultAccessToken = accessToken || process.env.META_ACCESS_TOKEN || APP_CONFIG.meta.accessToken;
   }
 
   private getToken(customToken?: string): string {
-    const token = customToken || this.defaultAccessToken;
+    const token = customToken || this.defaultAccessToken || APP_CONFIG.meta.accessToken;
     if (!token) throw new Error('Meta Access Token is missing');
     return token;
   }

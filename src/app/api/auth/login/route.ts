@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { APP_CONFIG } from '../../../../infrastructure/config/defaults';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { email, password } = body;
 
-    const validEmail = process.env.ADMIN_EMAIL || 'admin@mediabuyer.pro';
-    const validPassword = process.env.ADMIN_PASSWORD || 'Admin@2026';
+    const validEmail = APP_CONFIG.admin.email;
+    const validPassword = APP_CONFIG.admin.password;
 
     // Verify credentials
     if (email === validEmail && password === validPassword) {
