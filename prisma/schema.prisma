@@ -1,0 +1,327 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Platform {
+  META
+  TIKTOK
+  GOOGLE
+}
+
+enum EntityStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum TargetType {
+  CAMPAIGN
+  ADSET
+  AD
+}
+
+enum MetricType {
+  CPA
+  ROAS
+  SPEND
+  CTR
+  CPM
+  CPC
+  CONVERSIONS
+  FREQUENCY
+}
+
+enum OperatorType {
+  GREATER_THAN
+  LESS_THAN
+  EQUALS
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN_OR_EQUAL
+}
+
+enum ActionType {
+  PAUSE
+  UNPAUSE
+  BOOST_BUDGET
+  DECREASE_BUDGET
+  SEND_ALERT
+}
+
+enum SentimentType {
+  POSITIVE
+  NEGATIVE
+  INQUIRY_PRICE
+  SPAM
+  NEUTRAL
+}
+
+enum CommentStatus {
+  PENDING
+  REPLIED
+  HIDDEN
+  RESOLVED
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATING
+  WON
+  LOST
+}
+
+model FacebookUserAccount {
+  id              String              @id @default(uuid())
+  name            String
+  fbUserId        String              @unique
+  accessToken     String
+  tokenExpiresAt  DateTime?
+  avatarUrl       String?
+  status          String              @default("ACTIVE")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  portfolios      BusinessPortfolio[]
+  adAccounts      AdAccount[]
+}
+
+model BusinessPortfolio {
+  id                 String              @id @default(uuid())
+  name               String
+  fbBusinessId       String              @unique
+  userAccountId      String
+  userAccount        FacebookUserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+  verificationStatus String              @default("VERIFIED")
+  vertical           String?             @default("ECOMMERCE")
+  primaryPageId      String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  adAccounts         AdAccount[]
+  pages              SocialPage[]
+
+  @@index([userAccountId])
+}
+
+model AdAccount {
+  id                  String              @id @default(uuid())
+  name                String
+  platform            Platform            @default(META)
+  currency            String              @default("USD")
+  accountId           String              @unique
+  accessToken         String?
+  status              String              @default("ACTIVE")
+  userAccountId       String?
+  userAccount         FacebookUserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+  businessPortfolioId String?
+  businessPortfolio   BusinessPortfolio?   @relation(fields: [businessPortfolioId], references: [id], onDelete: SetNull)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  campaigns           Campaign[]
+
+  @@index([businessPortfolioId])
+  @@index([userAccountId])
+}
+
+model Campaign {
+  id              String        @id @default(uuid())
+  name            String
+  platformId      String        @unique
+  adAccountId     String
+  adAccount       AdAccount     @relation(fields: [adAccountId], references: [id], onDelete: Cascade)
+  status          EntityStatus  @default(ACTIVE)
+  objective       String        @default("OUTCOME_SALES")
+  dailyBudget     Float         @default(0)
+  lifetimeBudget  Float         @default(0)
+  spend           Float         @default(0)
+  impressions     Int           @default(0)
+  clicks          Int           @default(0)
+  cpc             Float         @default(0)
+  cpm             Float         @default(0)
+  ctr             Float         @default(0)
+  conversions     Int           @default(0)
+  cpa             Float         @default(0)
+  roas            Float         @default(0)
+  conversionValue Float         @default(0)
+  lastSyncedAt    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  adSets          AdSet[]
+  ruleLogs        RuleLog[]
+
+  @@index([status])
+  @@index([adAccountId])
+}
+
+model AdSet {
+  id          String        @id @default(uuid())
+  name        String
+  platformId  String        @unique
+  campaignId  String
+  campaign    Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  status      EntityStatus  @default(ACTIVE)
+  dailyBudget Float         @default(0)
+  spend       Float         @default(0)
+  cpa         Float         @default(0)
+  roas        Float         @default(0)
+  conversions Int           @default(0)
+  lastSyncedAt DateTime     @default(now())
+  ads         Ad[]
+
+  @@index([campaignId])
+}
+
+model Ad {
+  id          String        @id @default(uuid())
+  name        String
+  platformId  String        @unique
+  adSetId     String
+  adSet       AdSet         @relation(fields: [adSetId], references: [id], onDelete: Cascade)
+  status      EntityStatus  @default(ACTIVE)
+  previewUrl  String?
+  spend       Float         @default(0)
+  cpa         Float         @default(0)
+  roas        Float         @default(0)
+  conversions Int           @default(0)
+  lastSyncedAt DateTime     @default(now())
+
+  @@index([adSetId])
+}
+
+model AutomationRule {
+  id                 String       @id @default(uuid())
+  name               String
+  description        String?
+  isEnabled          Boolean      @default(true)
+  targetType         TargetType   @default(CAMPAIGN)
+  metric             MetricType
+  operator           OperatorType
+  threshold          Float
+  minSpendCondition  Float?       @default(0)
+  minConversionsCondition Int?    @default(0)
+  action             ActionType
+  actionParam        Float?       @default(0)
+  notifyTelegram     Boolean      @default(true)
+  lastTriggeredAt    DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  logs               RuleLog[]
+}
+
+model RuleLog {
+  id          String       @id @default(uuid())
+  ruleId      String
+  rule        AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  campaignId  String?
+  campaign    Campaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  targetName  String
+  actionTaken String
+  reason      String
+  metricValue Float
+  createdAt   DateTime     @default(now())
+
+  @@index([ruleId])
+}
+
+model SocialPage {
+  id                  String             @id @default(uuid())
+  name                String
+  platform            String             @default("FACEBOOK")
+  pageId              String             @unique
+  accessToken         String?
+  avatarUrl           String?
+  businessPortfolioId String?
+  businessPortfolio   BusinessPortfolio? @relation(fields: [businessPortfolioId], references: [id], onDelete: SetNull)
+  isActive            Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  comments            Comment[]
+
+  @@index([businessPortfolioId])
+}
+
+model Comment {
+  id               String        @id @default(uuid())
+  pageId           String
+  page             SocialPage    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  postId           String
+  commentId        String        @unique
+  senderName       String
+  senderId         String
+  message          String
+  sentiment        SentimentType @default(NEUTRAL)
+  intent           String        @default("GENERAL")
+  status           CommentStatus @default(PENDING)
+  replyMessage     String?
+  repliedAt        DateTime?
+  isPrivateReplied Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([pageId])
+  @@index([status])
+  @@index([sentiment])
+}
+
+model Conversation {
+  id               String        @id @default(uuid())
+  platform         String        @default("MESSENGER") // MESSENGER, INSTAGRAM_DM, WHATSAPP
+  platformThreadId String        @unique
+  senderName       String
+  senderId         String
+  senderAvatar     String?
+  pageName         String?
+  portfolioName    String?
+  status           String        @default("OPEN") // OPEN, RESOLVED, FLAGGED
+  unreadCount      Int           @default(0)
+  lastMessageText  String
+  lastMessageAt    DateTime      @default(now())
+  sentiment        SentimentType @default(INQUIRY_PRICE)
+  leadId           String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  messages         ChatMessage[]
+
+  @@index([status])
+  @@index([platform])
+}
+
+model ChatMessage {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType     String       // CUSTOMER, AGENT, AI
+  text           String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model Lead {
+  id          String     @id @default(uuid())
+  name        String
+  phone       String?
+  email       String?
+  source      String     @default("COMMENT")
+  stage       LeadStage  @default(NEW)
+  dealValue   Float      @default(0)
+  currency    String     @default("EGP")
+  notes       String?
+  assignedTo  String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([stage])
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --font-cairo: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bg-main: #0b0e14;
+  --bg-card: #111622;
+  --bg-card-hover: #161c2b;
+  --border-subtle: #1e2638;
+  --border-active: #2b364e;
+}
+
+body {
+  background-color: #0b0e14;
+  color: #e2e8f0;
+  font-family: var(--font-cairo), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  letter-spacing: -0.01em;
+}
+
+/* Eye-Comfort Smooth Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0e14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2638;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2b364e;
+}
+
+/* Reduced strain inputs */
+input, textarea, select {
+  font-family: inherit;
+}
