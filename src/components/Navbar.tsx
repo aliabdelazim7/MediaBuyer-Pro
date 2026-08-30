@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   BarChart3, 
   Zap, 
@@ -10,20 +10,27 @@ import {
   Users, 
   Settings, 
   RefreshCw, 
-  ShieldCheck,
-  Send,
-  Building2,
-  Sparkles,
-  Menu,
-  X
+  ShieldCheck, 
+  Send, 
+  Building2, 
+  Sparkles, 
+  Menu, 
+  X,
+  LogOut
 } from 'lucide-react';
 import { PortfolioSwitcher } from './PortfolioSwitcher';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Hide Navbar on Login page
+  if (pathname === '/login') {
+    return null;
+  }
 
   const handleQuickSync = async () => {
     setSyncing(true);
@@ -41,6 +48,16 @@ export const Navbar: React.FC = () => {
       setSyncMessage('فشلت المزامنة');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      console.error('Logout error:', err);
     }
   };
 
@@ -101,7 +118,7 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Left Section: Action Buttons & Mobile Menu Toggle */}
+          {/* Left Section: Action Buttons & Logout & Mobile Menu Toggle */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleQuickSync}
@@ -121,6 +138,15 @@ export const Navbar: React.FC = () => {
               <Send className="w-3.5 h-3.5" />
               <span>تليجرام</span>
             </Link>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition active:scale-95"
+              title="تسجيل الخروج"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
 
             {/* Mobile / Tablet Hamburger Button */}
             <button
@@ -159,7 +185,7 @@ export const Navbar: React.FC = () => {
       )}
 
       {syncMessage && (
-        <div className="bg-emerald-500/10 border-t border-emerald-500/20 text-emerald-400 text-xs py-1 text-center font-semibold">
+        <div className="bg-blue-600/90 text-white text-[11px] py-1 text-center font-bold animate-fadeIn">
           {syncMessage}
         </div>
       )}
