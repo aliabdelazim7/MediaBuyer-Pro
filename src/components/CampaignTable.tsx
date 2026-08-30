@@ -221,17 +221,17 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
   return (
     <div className="space-y-4">
       {/* 1. TOP INTERACTIVE CONTROLS & DATE PRESETS BAR */}
-      <div className="bg-[#111622] border border-[#1e2638] rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-[#111622] border border-[#1e2638] rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Date Selector Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 lg:pb-0 w-full lg:w-auto shrink-0">
             <Calendar className="w-4 h-4 text-blue-400 shrink-0 ml-1" />
             {datePresets.map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => onDatePresetChange(preset.id)}
                 disabled={isLoading}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition active:scale-95 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition active:scale-95 shrink-0 ${
                   currentDatePreset === preset.id
                     ? 'bg-[#1d4ed8] text-white shadow-sm font-bold'
                     : 'bg-[#0b0e14] text-[#8b9bb4] hover:text-[#f1f5f9] hover:bg-[#161c2b] border border-[#1e2638]'
@@ -243,8 +243,8 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
           </div>
 
           {/* Quick Search & Status Chips */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <div className="relative flex-1 sm:w-56">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full lg:w-auto">
+            <div className="relative w-full sm:w-56 min-w-[140px]">
               <Search className="w-3.5 h-3.5 text-[#64748b] absolute right-3 top-2.5" />
               <input
                 type="text"
@@ -255,52 +255,54 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
               />
             </div>
 
-            <div className="flex bg-[#0b0e14] p-0.5 rounded-xl border border-[#1e2638] text-xs">
-              {(['ALL', 'ACTIVE', 'PAUSED'] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition text-[11px] ${
-                    statusFilter === s ? 'bg-[#1e293b] text-blue-400 font-bold' : 'text-[#8b9bb4]'
-                  }`}
-                >
-                  {s === 'ALL' ? 'الكل' : s === 'ACTIVE' ? 'النشطة' : 'المتوقفة'}
-                </button>
-              ))}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto">
+              <div className="flex bg-[#0b0e14] p-0.5 rounded-xl border border-[#1e2638] text-xs shrink-0">
+                {(['ALL', 'ACTIVE', 'PAUSED'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition text-[11px] whitespace-nowrap ${
+                      statusFilter === s ? 'bg-[#1e293b] text-blue-400 font-bold' : 'text-[#8b9bb4]'
+                    }`}
+                  >
+                    {s === 'ALL' ? 'الكل' : s === 'ACTIVE' ? 'النشطة' : 'المتوقفة'}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setPerformanceFilter(performanceFilter === 'WINNERS' ? 'ALL' : 'WINNERS')}
+                className={`px-2.5 py-1 rounded-xl font-medium transition text-[11px] border flex items-center gap-1 shrink-0 whitespace-nowrap ${
+                  performanceFilter === 'WINNERS'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-bold'
+                    : 'bg-[#0b0e14] border-[#1e2638] text-[#8b9bb4] hover:text-[#cbd5e1]'
+                }`}
+              >
+                <Award className="w-3 h-3 text-emerald-400" />
+                <span>الرابحة 🏆</span>
+              </button>
+
+              <button
+                onClick={() => setPerformanceFilter(performanceFilter === 'BLEEDERS' ? 'ALL' : 'BLEEDERS')}
+                className={`px-2.5 py-1 rounded-xl font-medium transition text-[11px] border flex items-center gap-1 shrink-0 whitespace-nowrap ${
+                  performanceFilter === 'BLEEDERS'
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30 font-bold'
+                    : 'bg-[#0b0e14] border-[#1e2638] text-[#8b9bb4] hover:text-[#cbd5e1]'
+                }`}
+              >
+                <AlertTriangle className="w-3 h-3 text-rose-400" />
+                <span>نزيف ⚠️</span>
+              </button>
+
+              <button
+                onClick={onRefresh}
+                disabled={isLoading}
+                className="p-1.5 rounded-xl bg-[#0b0e14] hover:bg-[#161c2b] text-blue-400 border border-[#1e2638] transition disabled:opacity-50 shrink-0"
+                title="تحديث مباشر"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-
-            <button
-              onClick={() => setPerformanceFilter(performanceFilter === 'WINNERS' ? 'ALL' : 'WINNERS')}
-              className={`px-2.5 py-1 rounded-xl font-medium transition text-[11px] border flex items-center gap-1 ${
-                performanceFilter === 'WINNERS'
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-bold'
-                  : 'bg-[#0b0e14] border-[#1e2638] text-[#8b9bb4] hover:text-[#cbd5e1]'
-              }`}
-            >
-              <Award className="w-3 h-3 text-emerald-400" />
-              <span>الرابحة 🏆</span>
-            </button>
-
-            <button
-              onClick={() => setPerformanceFilter(performanceFilter === 'BLEEDERS' ? 'ALL' : 'BLEEDERS')}
-              className={`px-2.5 py-1 rounded-xl font-medium transition text-[11px] border flex items-center gap-1 ${
-                performanceFilter === 'BLEEDERS'
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30 font-bold'
-                  : 'bg-[#0b0e14] border-[#1e2638] text-[#8b9bb4] hover:text-[#cbd5e1]'
-              }`}
-            >
-              <AlertTriangle className="w-3 h-3 text-rose-400" />
-              <span>نزيف ⚠️</span>
-            </button>
-
-            <button
-              onClick={onRefresh}
-              disabled={isLoading}
-              className="p-1.5 rounded-xl bg-[#0b0e14] hover:bg-[#161c2b] text-blue-400 border border-[#1e2638] transition disabled:opacity-50 shrink-0"
-              title="تحديث مباشر"
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
           </div>
         </div>
 
@@ -412,11 +414,22 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                           </span>
                         )}
                       </div>
+
+                      {/* Mobile Metrics Row */}
+                      <div className="flex md:hidden items-center gap-2 text-[10px] text-[#8b9bb4] pt-1 font-mono flex-wrap">
+                        <span>الصرف: <b className="text-white">{totalGroupSpend.toLocaleString()} {group.currency}</b></span>
+                        <span>•</span>
+                        <span>النتائج: <b className="text-emerald-400">{totalGroupConversions}</b></span>
+                        <span>•</span>
+                        <span>CPA: <b className="text-blue-400">{avgGroupCpa}</b></span>
+                        <span>•</span>
+                        <span className="text-emerald-400 font-bold">{activeGroupCampaigns} نشطة</span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Portfolio Quick Performance Metrics & Collapse Trigger */}
-                  <div className="flex items-center gap-4 text-xs font-mono">
+                  <div className="flex items-center gap-2 sm:gap-4 text-xs font-mono shrink-0">
                     <div className="hidden md:flex items-center gap-3">
                       <span className="text-[#8b9bb4]">
                         الصرف: <b className="text-white">{totalGroupSpend.toLocaleString()} {group.currency}</b>
@@ -435,7 +448,7 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                       </span>
                     </div>
 
-                    <button className="p-1 rounded-lg bg-[#161c2b] text-[#8b9bb4] hover:text-white">
+                    <button className="p-1.5 rounded-lg bg-[#161c2b] text-[#8b9bb4] hover:text-white">
                       {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
                     </button>
                   </div>
@@ -444,7 +457,7 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                 {/* CAMPAIGNS TABLE UNDER THIS BUSINESS PORTFOLIO */}
                 {!isCollapsed && (
                   <div className="overflow-x-auto animate-fadeIn">
-                    <table className="w-full text-right border-collapse text-xs">
+                    <table className="w-full text-right border-collapse text-xs min-w-[760px]">
                       <thead>
                         <tr className="bg-[#0b0e14] border-b border-[#1e2638] text-[#8b9bb4] font-semibold">
                           <th className="py-2.5 px-4 w-20">الحالة</th>

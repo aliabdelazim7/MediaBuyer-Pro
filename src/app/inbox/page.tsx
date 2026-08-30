@@ -66,6 +66,7 @@ export default function InboxPage() {
   const [sending, setSending] = useState(false);
   const [generatingAi, setGeneratingAi] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [mobileActiveTab, setMobileActiveTab] = useState<'CHATS' | 'MESSAGES' | 'LEAD'>('CHATS');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -105,6 +106,7 @@ export default function InboxPage() {
 
   const handleSelectConversation = async (conv: ConversationItem) => {
     setActiveConversation(conv);
+    setMobileActiveTab('MESSAGES');
     try {
       const res = await fetch(`/api/messages/${conv.id}`);
       const data = await res.json();
@@ -344,11 +346,11 @@ export default function InboxPage() {
         </div>
       </div>
 
-      {/* 3. 3-Column Chat Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[620px]">
+      {/* 3. 3-Column Chat Layout with Mobile Navigation Switcher */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[580px] sm:min-h-[620px]">
         
         {/* Left Column: Conversations for Selected Page (4 cols) */}
-        <div className="lg:col-span-4 bg-[#111622] border border-[#1e2638] rounded-2xl flex flex-col overflow-hidden shadow-sm">
+        <div className={`${mobileActiveTab === 'CHATS' ? 'flex' : 'hidden lg:flex'} lg:col-span-4 bg-[#111622] border border-[#1e2638] rounded-2xl flex-col overflow-hidden shadow-sm h-[580px] sm:h-auto`}>
           
           {/* Search & Platform Filter Chips */}
           <div className="p-3.5 border-b border-[#1e2638] space-y-2.5 bg-[#0d111a]">
@@ -445,37 +447,58 @@ export default function InboxPage() {
         </div>
 
         {/* Center Column: Live Chat Thread (5 cols) */}
-        <div className="lg:col-span-5 bg-[#111622] border border-[#1e2638] rounded-2xl flex flex-col overflow-hidden shadow-sm">
+        <div className={`${mobileActiveTab === 'MESSAGES' ? 'flex' : 'hidden lg:flex'} lg:col-span-5 bg-[#111622] border border-[#1e2638] rounded-2xl flex-col overflow-hidden shadow-sm h-[580px] sm:h-auto`}>
           {!activeConversation ? (
             <div className="flex-1 flex items-center justify-center text-[#64748b] text-xs">
               اختر محادثة لبدء الرد المباشر
             </div>
           ) : (
             <>
-              {/* Chat Thread Header */}
-              <div className="p-3.5 border-b border-[#1e2638] flex items-center justify-between gap-3 bg-[#0d111a] shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-xs">
+              {/* Chat Thread Header with Mobile Controls */}
+              <div className="p-3.5 border-b border-[#1e2638] flex items-center justify-between gap-2 bg-[#0d111a] shrink-0">
+                <div className="flex items-center gap-2">
+                  {/* Mobile Back Button */}
+                  <button
+                    onClick={() => setMobileActiveTab('CHATS')}
+                    className="lg:hidden p-1.5 rounded-xl bg-[#161c2b] text-[#cbd5e1] border border-[#242e42] hover:text-white"
+                    title="رجوع للمحادثات"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-xs shrink-0">
                     {activeConversation.senderName.slice(0, 2)}
                   </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-[#f1f5f9]">{activeConversation.senderName}</h3>
-                    <p className="text-[10px] text-[#8b9bb4] font-mono">
-                      {activeConversation.pageName || activeConversation.portfolioName} • {activeConversation.platform}
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-bold text-[#f1f5f9] truncate">{activeConversation.senderName}</h3>
+                    <p className="text-[10px] text-[#8b9bb4] font-mono truncate">
+                      {activeConversation.pageName || activeConversation.portfolioName}
                     </p>
                   </div>
                 </div>
 
-                {/* AI Draft Trigger */}
-                <button
-                  onClick={handleGenerateAiDraft}
-                  disabled={generatingAi}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 text-amber-300 border border-amber-500/20 text-xs font-bold transition active:scale-95 disabled:opacity-50"
-                  title="توليد رد ذكي مقترح بالعامية"
-                >
-                  <Sparkles className={`w-3.5 h-3.5 text-amber-400 ${generatingAi ? 'animate-spin' : ''}`} />
-                  <span>{generatingAi ? 'جاري التوليد...' : 'اقتراح رد AI'}</span>
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Mobile Lead Info Switcher */}
+                  <button
+                    onClick={() => setMobileActiveTab('LEAD')}
+                    className="lg:hidden p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold"
+                    title="بيانات العميل"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
+
+                  {/* AI Draft Trigger */}
+                  <button
+                    onClick={handleGenerateAiDraft}
+                    disabled={generatingAi}
+                    className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 hover:from-blue-600/30 hover:to-indigo-600/30 text-amber-300 border border-amber-500/20 text-xs font-bold transition active:scale-95 disabled:opacity-50"
+                    title="توليد رد ذكي مقترح بالعامية"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 text-amber-400 ${generatingAi ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">{generatingAi ? 'جاري التوليد...' : 'اقتراح رد AI'}</span>
+                    <span className="sm:hidden text-[11px]">AI</span>
+                  </button>
+                </div>
               </div>
 
               {/* Chat Messages Body */}
@@ -489,7 +512,7 @@ export default function InboxPage() {
                       className={`flex flex-col ${isAgent ? 'items-end' : 'items-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed ${
+                        className={`max-w-[85%] sm:max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed ${
                           isAgent
                             ? 'bg-[#1d4ed8] text-white rounded-br-none shadow-sm'
                             : 'bg-[#161c2b] text-[#f1f5f9] border border-[#242e42] rounded-bl-none'
@@ -529,12 +552,24 @@ export default function InboxPage() {
         </div>
 
         {/* Right Column: Customer Info & CRM Actions (3 cols) */}
-        <div className="lg:col-span-3 bg-[#111622] border border-[#1e2638] rounded-2xl p-4 shadow-sm space-y-4 flex flex-col justify-between">
+        <div className={`${mobileActiveTab === 'LEAD' ? 'flex' : 'hidden lg:flex'} lg:col-span-3 bg-[#111622] border border-[#1e2638] rounded-2xl p-4 shadow-sm flex-col justify-between h-[580px] sm:h-auto`}>
           {!activeConversation ? (
             <div className="text-center py-10 text-xs text-[#64748b]">لا توجد بيانات</div>
           ) : (
             <>
               <div className="space-y-4">
+                {/* Mobile Back to Chat */}
+                <div className="flex lg:hidden items-center justify-between border-b border-[#1e2638] pb-3">
+                  <button
+                    onClick={() => setMobileActiveTab('MESSAGES')}
+                    className="flex items-center gap-1.5 text-xs text-blue-400 font-semibold"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    <span>رجوع للمحادثة</span>
+                  </button>
+                  <span className="text-xs font-bold text-white">تفاصيل العميل</span>
+                </div>
+
                 {/* Profile Card */}
                 <div className="text-center space-y-2 pb-4 border-b border-[#1e2638]">
                   <div className="w-14 h-14 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-lg mx-auto shadow-md">
